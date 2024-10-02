@@ -24,6 +24,8 @@ class ZmaxDataID(enum.Enum):
     oxy_ir_dc = 14
     oxy_r_dc = 15
     oxy_dark_dc = 16
+    sample_number = 998
+    sample_time = 999
 
 
 def connect():
