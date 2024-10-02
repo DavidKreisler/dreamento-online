@@ -85,8 +85,7 @@ class SleepRecorderCLI(cmd.Cmd, QObject):
         try:
             numbers = [int(n) for n in numbers]
             self.set_signaltype_signal.emit(numbers)
-            #self.headbandinterface.set_signaltype(numbers)
-            print('the server has to be restarted for this change to have an effect!')
+            print('the recording has to be restarted for this change to have an effect!')
         except Exception:
             print('pass signals as integers according to "show_possible_signals", e.g. " set_signaltype 1,2,3"')
 
