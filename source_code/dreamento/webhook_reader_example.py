@@ -1,17 +1,18 @@
 from flask import Flask, request
 
 
-store = []
+stateStore = []
 
 app = Flask(__name__)
 
 
 @app.route('/webhookcallback/sleepstate', methods=['POST'])
 def sleepStateHook():
+    global stateStore
     state = request.values.get('state')
     epoch = request.values.get('epoch')
 
-    store.append((epoch, state))
+    stateStore.append((epoch, state))
 
     print(f'state: {state}')
     print('epoch: ' + str(epoch))
@@ -28,11 +29,13 @@ def helloHook():
 
 
 @app.route('/webhookcallback/finished', methods=['POST'])
-def recordingFinished():
-    print('finished signal received')
-    with open('received_sleep_states.txt') as f:
-        f.writelines(store)
-    store = 0
+def recordingFinishedHook():
+    global stateStore
+    with open('received_sleep_states.txt', 'w') as f:
+        f.writelines(stateStore)
+    stateStore = []
+
+    return "received"
 
 
 if __name__ == '__main__':
