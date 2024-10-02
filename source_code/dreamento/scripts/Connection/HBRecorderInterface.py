@@ -98,6 +98,10 @@ class HBRecorderInterface:
     def on_recording_finished(self):
         # when the recording is finished, this function is called
         self.isRecording = False
+
+        # send signal to webhook if it is running
+        if self.webhookActive:
+            requests.post(self.webHookBaseAdress + 'finished')
         print('recording finished')
 
     def on_recording_finished_write_stimulation_db(self, fileName):

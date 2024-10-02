@@ -29,6 +29,7 @@ def helloHook():
 
 @app.route('/webhookcallback/finished', methods=['POST'])
 def recordingFinished():
+    print('finished signal received')
     with open('received_sleep_states.txt') as f:
         f.writelines(store)
     store = 0
