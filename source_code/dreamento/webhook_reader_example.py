@@ -31,8 +31,9 @@ def helloHook():
 @app.route('/webhookcallback/finished', methods=['POST'])
 def recordingFinishedHook():
     global stateStore
+    lines = [', '.join([str(epoch), str(state)]) for epoch, state in stateStore]
     with open('received_sleep_states.txt', 'w') as f:
-        f.writelines(stateStore)
+        f.writelines(lines)
     stateStore = []
 
     return "received"
