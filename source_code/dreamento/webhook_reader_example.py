@@ -5,6 +5,7 @@ store = []
 
 app = Flask(__name__)
 
+
 @app.route('/webhookcallback/sleepstate', methods=['POST'])
 def sleepStateHook():
     state = request.values.get('state')
@@ -17,6 +18,7 @@ def sleepStateHook():
 
     return "received"
 
+
 @app.route('/webhookcallback/hello', methods=['POST'])
 def helloHook():
     msg = request.values.get('hello')
@@ -25,8 +27,12 @@ def helloHook():
     return "received"
 
 
-if __name__ == '__main__':
-    app.run()
+@app.route('/webhookcallback/finished', methods=['POST'])
+def recordingFinished():
     with open('received_sleep_states.txt') as f:
         f.writelines(store)
-    
+    store = 0
+
+
+if __name__ == '__main__':
+    app.run()
