@@ -122,7 +122,6 @@ class RecordThread(QThread):
 
             if sendEpochForScoring:
                 if self.secondCounter % 15 == 0:
-                    print(f'should send now. epoch {self.secondCounter}')
                     sendEEGr = [sample[0] for sample in recording[-(30*256):]]
                     sendEEGl = [sample[1] for sample in recording[-(30*256):]]
                     self.sendEpochForScoring2main(sendEEGr, sendEEGl, self.epochCounter)

@@ -125,8 +125,6 @@ class HBRecorderInterface:
         print('scoring stopped')
 
     def get_epoch_for_scoring(self, eegSigr=None, eegSigl=None, epochCounter=0):
-        print(f'getting epoch for scoring at epochCounter: {epochCounter}')
-        print(len(eegSigr))
         if self.scoreSleep:
             if self.scoreSleep:
                 if self.inferenceModel is None:
