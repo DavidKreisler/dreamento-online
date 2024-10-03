@@ -186,7 +186,8 @@ class HBRecorderInterface:
             time.sleep(1)
             #self.recorderThread.stop()
             #self.recorderThread.quit()
-            self.recorderThread.join()
+            while not self.recorderThread.finished:
+                time.sleep(0.001)
 
         if self.eegThread and self.eegThread.isRunning():
             self.eegThread.stop()
