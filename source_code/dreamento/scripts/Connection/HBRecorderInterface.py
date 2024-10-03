@@ -103,6 +103,7 @@ class HBRecorderInterface:
         print('recording finished')
 
     def on_recording_finished_write_stimulation_db(self, fileName):
+        print('on_recording_finished called')
         # save triggered stimulation information on disk:
         with open(f'{fileName}-markers.json', 'w') as fp:
             json.dump(self.stimulationDataBase, fp, indent=4, separators=(',', ': '))
