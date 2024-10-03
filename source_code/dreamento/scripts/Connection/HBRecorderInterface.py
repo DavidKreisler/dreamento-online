@@ -1,9 +1,7 @@
 from datetime import datetime
-
 import os
-
+import time
 import json
-
 import numpy as np
 import requests
 
@@ -185,6 +183,7 @@ class HBRecorderInterface:
     def quit(self):
         if self.recorderThread:
             self.stop_recording()
+            time.sleep(1)
             #self.recorderThread.stop()
             #self.recorderThread.quit()
 
