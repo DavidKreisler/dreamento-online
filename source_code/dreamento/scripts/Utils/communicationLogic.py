@@ -1,3 +1,5 @@
+import time
+
 import sys
 
 from PyQt5.QtWidgets import QApplication
@@ -64,6 +66,13 @@ class CommunicationLogic:
         self.hbif.set_signaltype(signalTypes)
 
     def quit(self, _: bool):
+
+        if self.hbif.isRecording:
+            # gracefully stop recording if it is running to allow saving files. When it is called only once from within the
+            # class it has to receive a signal again to start saving. Therefore we do it here already
+            self.hbif.stop_recording()
+            time.sleep(1)
+
         self.hbif.quit()
 
         self.cliThread.stop()
