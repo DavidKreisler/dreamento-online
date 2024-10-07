@@ -147,14 +147,23 @@ class RecordThread(QThread):
         self.threadactive = False
 
     def save_edf(self, signals: list, channels: list, path: str):
+        min_eeg_val = -1000000
+        max_eeg_val = 1000000
+
         # write an edf file
         signals_reformatted = []
         for idx, ch in enumerate(channels):
             signals_reformatted.append([])
             for s in signals:
-                signals_reformatted[idx].append(s[idx])
+                val = s[idx]
+                if val < min_eeg_val:
+                    val = min_eeg_val
+                elif val > max_eeg_val:
+                    val = max_eeg_val
+                    
+                signals_reformatted[idx].append(val)
 
         channel_names = [str(ZmaxDataID(channel)) for channel in channels]
-        signal_headers = highlevel.make_signal_headers(channel_names, sample_frequency=256, physical_min=-10000000000000000000, physical_max=10000000000000000000)
+        signal_headers = highlevel.make_signal_headers(channel_names, sample_frequency=256, physical_min=-1000000, physical_max=1000000)
         header = highlevel.make_header(patientname='patient')
         highlevel.write_edf(os.path.join(path, 'complete_recording.edf'), np.array(signals_reformatted), signal_headers, header)
