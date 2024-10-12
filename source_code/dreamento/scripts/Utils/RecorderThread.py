@@ -160,7 +160,7 @@ class RecordThread(QThread):
                     val = min_eeg_val
                 elif val > max_eeg_val:
                     val = max_eeg_val
-                    
+
                 signals_reformatted[idx].append(val)
 
         channel_names = [str(ZmaxDataID(channel)) for channel in channels]

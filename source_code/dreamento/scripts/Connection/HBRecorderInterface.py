@@ -1,3 +1,4 @@
+import scipy.signal
 from datetime import datetime
 import os
 import time
@@ -15,6 +16,7 @@ from scripts.UI.EEGPlotWindow import EEGVisThread
 class HBRecorderInterface:
     def __init__(self):
         self.sample_rate = 256
+        self.scoring_sample_rate = 100
         self.signalType = [0, 1, 2, 3, 4, 5, 7, 8]
         # [
         #   0=eegr, 1=eegl, 2=dx, 3=dy, 4=dz, 5=bodytemp,
@@ -125,26 +127,26 @@ class HBRecorderInterface:
 
     def get_epoch_for_scoring(self, eegSigr=None, eegSigl=None, epochCounter=0):
         if self.scoreSleep:
-            if self.scoreSleep:
-                if self.inferenceModel is None:
-                    self.inferenceModel = SleePyCoInference(1, self.sleepScoringConfig)
-                    print('sleep scoring model imported')
+            if self.inferenceModel is None:
+                self.inferenceModel = SleePyCoInference(1, self.sleepScoringConfig)
+                print('sleep scoring model imported')
 
-                # inference
-                if len(eegSigr) >= 30 * 256:  # only when one full epoch can be sent to the model
-                    modelPrediction = self.inferenceModel.infere(
-                        np.asarray(eegSigr).reshape(1, 1, len(eegSigr)))
-                    predictionToTransmit = int(modelPrediction[0])
-                    self.scoring_predictions.append((datetime.now(), ESleepState(predictionToTransmit)))
+            # inference
+            if len(eegSigr) >= 30 * self.sample_rate:  # only when one full epoch can be sent to the model
+                signal = scipy.signal.resample(eegSigr, int(100 / 256 * len(eegSigr)))
+                signal = np.array(signal).reshape(1, 1, len(signal))
+                modelPrediction = self.inferenceModel.infere(signal)
+                predictionToTransmit = int(modelPrediction[0])
+                self.scoring_predictions.append((datetime.now(), ESleepState(predictionToTransmit)))
 
-                    if self.webhookActive:
-                        data = {'state': ESleepState(predictionToTransmit),
-                                'epoch': self.epochCounter}
-                        try:
-                            requests.post(self.webHookBaseAdress + 'sleepstate', data=data)
-                        except Exception as e:
-                            print(e)
-                            print('webhook is probably not available')
+                if self.webhookActive:
+                    data = {'state': ESleepState(predictionToTransmit),
+                            'epoch': self.epochCounter}
+                    try:
+                        requests.post(self.webHookBaseAdress + 'sleepstate', data=data)
+                    except Exception as e:
+                        print(e)
+                        print('webhook is probably not available')
 
     def getEEG_from_thread(self, eegSignal_r, eegSignal_l, epoch_counter=0):
         self.epochCounter = epoch_counter
