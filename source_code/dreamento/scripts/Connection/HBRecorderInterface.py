@@ -16,7 +16,6 @@ from scripts.UI.EEGPlotWindow import EEGVisThread
 class HBRecorderInterface:
     def __init__(self):
         self.sample_rate = 256
-        self.scoring_sample_rate = 100
         self.signalType = [0, 1, 2, 3, 4, 5, 7, 8]
         # [
         #   0=eegr, 1=eegl, 2=dx, 3=dy, 4=dz, 5=bodytemp,
@@ -133,7 +132,7 @@ class HBRecorderInterface:
 
             # inference
             if len(eegSigr) >= 30 * self.sample_rate:  # only when one full epoch can be sent to the model
-                signal = scipy.signal.resample(eegSigr, int(100 / 256 * len(eegSigr)))
+                signal = eegSigr
                 signal = np.array(signal).reshape(1, 1, len(signal))
                 modelPrediction = self.inferenceModel.infere(signal)
                 predictionToTransmit = int(modelPrediction[0])
