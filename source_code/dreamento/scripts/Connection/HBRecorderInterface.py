@@ -133,7 +133,7 @@ class HBRecorderInterface:
 
             # inference
             if len(eegSigr) >= 30 * self.sample_rate:  # only when one full epoch can be sent to the model
-                signal = scipy.signal.resample(eegSigr, int(100 / 256 * len(eegSigr)))
+                signal = scipy.signal.resample(eegSigr, int(self.scoring_sample_rate / self.sample_rate * len(eegSigr)))
                 signal = np.array(signal).reshape(1, 1, len(signal))
                 modelPrediction = self.inferenceModel.infere(signal)
                 predictionToTransmit = int(modelPrediction[0])
