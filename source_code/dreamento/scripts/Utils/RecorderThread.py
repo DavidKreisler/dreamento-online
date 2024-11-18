@@ -121,9 +121,9 @@ class RecordThread(QThread):
                 buffer2analyzeIsReady = False
 
             if sendEpochForScoring:
-                if self.secondCounter % 15 == 0:
-                    sendEEGr = [sample[0] for sample in recording[-(30*256):]]
-                    sendEEGl = [sample[1] for sample in recording[-(30*256):]]
+                if self.secondCounter % 15 == 0 and self.epochCounter >= 10:
+                    sendEEGr = [sample[0] for sample in recording[-(5 * 60 * self.sample_rate):]]
+                    sendEEGl = [sample[1] for sample in recording[-(5 * 60 * self.sample_rate):]]
                     self.sendEpochForScoring2main(sendEEGr, sendEEGl, self.epochCounter)
 
             if self.threadactive is False:

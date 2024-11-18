@@ -1,5 +1,7 @@
+import mne
 import scipy.signal
-from datetime import datetime
+import yasa
+from datetime import datetime, timedelta
 import os
 import time
 import json
@@ -42,7 +44,7 @@ class HBRecorderInterface:
         config['name'] = os.path.basename(self.sleepScoringConfigPath).replace('.json', '')
         self.sleepScoringConfig = config
 
-        self.inferenceModel = None
+        #self.inferenceModel = None
         self.scoring_predictions = []
         self.epochCounter = 0
 
@@ -71,8 +73,6 @@ class HBRecorderInterface:
         self.recorderThread = RecordThread(signalType=self.signalType)
 
         if self.firstRecording:
-            # TODO: init sleep scoring model here
-
             self.firstRecording = False
 
         self.isRecording = True
@@ -127,20 +127,21 @@ class HBRecorderInterface:
 
     def get_epoch_for_scoring(self, eegSigr=None, eegSigl=None, epochCounter=0):
         if self.scoreSleep:
-            if self.inferenceModel is None:
-                self.inferenceModel = SleePyCoInference(1, self.sleepScoringConfig)
-                print('sleep scoring model imported')
-
             # inference
-            if len(eegSigr) >= 30 * self.sample_rate:  # only when one full epoch can be sent to the model
-                signal = scipy.signal.resample(eegSigr, int(self.scoring_sample_rate / self.sample_rate * len(eegSigr)))
-                signal = np.array(signal).reshape(1, 1, len(signal))
-                modelPrediction = self.inferenceModel.infere(signal)
-                predictionToTransmit = int(modelPrediction[0])
-                self.scoring_predictions.append((datetime.now(), ESleepState(predictionToTransmit)))
+            if len(eegSigr) >= 5 * 60 * self.sample_rate:  # only when minimum of 5 mins of signal have been sent.
+                # to perform sleep scoring of a 5 min single channel signal
+                info = mne.create_info(ch_names=['AF8-AFZ'], sfreq=256, ch_types='eeg')
+                mne_array = mne.io.RawArray([eegSigr], info)
+
+                y_pred = yasa.SleepStaging(mne_array, eeg_name="AF8-AFZ").predict()
+
+                # since this happens every 15 seconds we are only interested in the period from 2:30 to 3:00 in the signal
+                # the rest of the interval is needed by the yasa module as context
+                predictionToTransmit = y_pred[5]
+                self.scoring_predictions.append((datetime.now() - timedelta(minutes=2), predictionToTransmit))
 
                 if self.webhookActive:
-                    data = {'state': ESleepState(predictionToTransmit),
+                    data = {'state': predictionToTransmit,
                             'epoch': self.epochCounter}
                     try:
                         requests.post(self.webHookBaseAdress + 'sleepstate', data=data)
