@@ -1,17 +1,12 @@
 import mne
-import scipy.signal
 import yasa
 from datetime import datetime, timedelta
 import os
-import time
 import json
-import numpy as np
 import requests
 
 from scripts.Connection.ZmaxHeadband import ZmaxHeadband
 from scripts.Utils.RecorderThread import RecordThread
-from scripts.Utils.ESleepStages import ESleepState
-from scripts.SleepScoring.SleePyCoInference import SleePyCoInference
 from scripts.UI.EEGPlotWindow import EEGVisThread
 
 
