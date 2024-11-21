@@ -32,13 +32,6 @@ class HBRecorderInterface:
         # stimulations
         self.stimulationDataBase = {}  # have info of all triggered stimulations
 
-        # scoring
-        self.sleepScoringConfigPath = 'scripts/SleepScoring/SleePyCo/SleePyCo/configs/SleePyCo-Transformer_SL-10_numScales-3_Sleep-EDF-2018_freezefinetune.json'
-        with open(self.sleepScoringConfigPath, 'r') as config_file:
-            config = json.load(config_file)
-        config['name'] = os.path.basename(self.sleepScoringConfigPath).replace('.json', '')
-        self.sleepScoringConfig = config
-
         #self.inferenceModel = None
         self.scoring_predictions = []
         self.epochCounter = 0
