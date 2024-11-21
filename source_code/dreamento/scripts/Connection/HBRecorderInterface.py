@@ -118,10 +118,10 @@ class HBRecorderInterface:
             # inference
             if len(eegSigr) >= 5 * 60 * self.sample_rate:  # only when minimum of 5 mins of signal have been sent.
                 # to perform sleep scoring of a 5 min single channel signal
-                info = mne.create_info(ch_names=['AF8-AFZ'], sfreq=256, ch_types='eeg')
+                info = mne.create_info(ch_names=['FPZ-F7'], sfreq=256, ch_types='eeg')
                 mne_array = mne.io.RawArray([eegSigr], info)
 
-                y_pred = yasa.SleepStaging(mne_array, eeg_name="AF8-AFZ").predict()
+                y_pred = yasa.SleepStaging(mne_array, eeg_name="FPZ-F7").predict()
 
                 # since this happens every 15 seconds we are only interested in the period from 2:30 to 3:00 in the signal
                 # the rest of the interval is needed by the yasa module as context
