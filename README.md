@@ -3,6 +3,18 @@
 This repository was originally based on dreamento (accessed from https://github.com/dreamento/dreamento, mid 2024). 
 It has developed into a standalone project for **eeg recording** of the signal captured by a ZMax Headband (by Hypnodyne) and **scoring** the eeg signal using the **yasa** library. Additionally the option to send the scoring to a separate **webhook** is implemented, to allow to control external (audio, visual, ...) impulses or applications.
 
+## requirements
+- python 3.11
+- libraries:
+  - Flask==3.1.0
+  - mne==0.23.4
+  - pyEDFlib==0.1.38
+  - PyQt5==5.15.11
+  - pyqtgraph-0.13.7
+  - torch==2.5.1
+  - yasa==0.6.5
+ 
+
 ## run from scripts
 all the following steps describe the procedure for the windows operating system. On other os the commands may differ slightly.
 
@@ -31,16 +43,4 @@ make sure **HDServer** from hypnodyne is running.
 - [ ] bugfixes
   - [ ] the window opened with show_signal can crashes the app when moved or resized incorrectly
   - [ ] when terminating the program after show_signal was called the program gets stuck. probably has to do with threads -> solution: remove show_signal
-## requirements
-- python 3.6
-- libraries:
-  - PyQt5==5.15.6
-  - mne==0.23.4
-  - yasa==0.5.1
-  - pyEDFlib==0.1.38
-  - torch==1.10.2
-  - pyqtgraph==0.11.1
-  - Flask==3.1.0
-  - lightgbm
-
 
