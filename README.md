@@ -3,6 +3,28 @@
 This repository was originally based on dreamento (accessed from https://github.com/dreamento/dreamento, mid 2024). 
 It has developed into a standalone project for **eeg recording** of the signal captured by a ZMax Headband (by Hypnodyne) and **scoring** the eeg signal using the **yasa** library. Additionally the option to send the scoring to a separate **webhook** is implemented, to allow to control external (audio, visual, ...) impulses or applications.
 
+## run from scripts
+all the following steps describe the procedure for the windows operating system. On other os the commands may differ slightly.
+
+clone the repository
+
+create a virtual env:
+  python -m venv /path/to/wherever/you/want/it/to/live/
+
+activate the venv:
+  run the activate.bat file from your cmd located at /path/to/venv/Scripts/activate.bat
+  
+make sure pip is upgraded:
+  python -m pip install --upgrade pip
+
+install the requirements from requirements.txt located in the repository or install the required ones manually:
+  python -m pip install -r requirements.txt
+
+run mainconsole.py from your cmd that has the venv activated
+
+## usage
+make sure **HDServer** from hypnodyne is running. 
+
 ## TODO:
 - [X] implement always responsive console
 - [X] implement recorder
@@ -33,25 +55,7 @@ It has developed into a standalone project for **eeg recording** of the signal c
   - pyEDFlib==0.1.38
   - torch==1.10.2
   - pyqtgraph==0.11.1
+  - Flask==3.1.0
+  - lightgbm
 
-all the following steps describe the procedure for the windows operating system. On other os the commands may differ slightly.
 
-## run from scripts
-clone the repository
-
-create a virtual env:
-  python -m venv /path/to/wherever/you/want/it/to/live/
-
-activate the venv:
-  run the activate.bat file from your cmd located at /path/to/venv/Scripts/activate.bat
-  
-make sure pip is upgraded:
-  python -m pip install --upgrade pip
-
-install the requirements from requirements.txt located in the repository or install the required ones manually:
-  python -m pip install -r requirements.txt
-
-run mainconsole.py from your cmd that has the venv activated
-
-## usage
-make sure **HDServer** from hypnodyne is running. 
