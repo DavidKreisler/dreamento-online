@@ -27,6 +27,9 @@ class ZmaxDataID(enum.Enum):
     sample_number = 998
     sample_time = 999
 
+    def __str__(self):
+        return self.name
+
 
 def connect():
     # sendSocket: the standard TCP socket used to send data to the headband. (Normally we would read from that socket aswell, but reading seems not to work.

@@ -17,7 +17,7 @@ class CLIThread(QThread):
 
 class SleepRecorderCLI(cmd.Cmd, QObject):
     prompt = '>> '
-    intro = 'Welcome to the sleep recoder CLI. type "help" for available commands.'
+    intro = 'Welcome to the sleep recoder CLI. type "help" for all available commands and "help <cmd>" to see info on the specific command.'
 
     connect_signal = pyqtSignal(bool)
     start_signal = pyqtSignal(bool)
@@ -37,6 +37,7 @@ class SleepRecorderCLI(cmd.Cmd, QObject):
         self._is_running = True
 
     def stop(self):
+        """Stop the CLI"""""
         self._is_running = False
         return True
 
@@ -49,21 +50,28 @@ class SleepRecorderCLI(cmd.Cmd, QObject):
         self.connect_signal.emit(True)
 
     def do_start(self, line):
+        """start the recoring, scoring and the webhook. If the webhook startup fails, the recording and scoring are
+        still started."""
+        self.start_signal.emit(True)
+        self.start_scoring_signal.emit(True)
+        self.start_webhook_signal.emit(True)
+
+    def do_stop(self, line):
+        """stops recording, scoring and webhook"""
+        self.stop_signal.emit(True)
+
+    def do_start_recording(self, line):
         """Start the recoring"""
         self.start_signal.emit(True)
 
-    def do_stop(self, line):
-        """Stop the recording"""
-        self.stop_signal.emit(True)
-
     def do_show_signal(self, line):
-        """Shoe the eeg signal. This is a experimental feature, known to have bugs and preventing the application from
+        """Development feature! do not use when recording! Shows the eeg signal. This is a experimental feature, known to have bugs and preventing the application from
         terminating. It should not interfere with recording, but resize and move the window carefully and slowly. It
         crashes the whole application sometimes."""
         self.show_eeg_signal.emit(True)
 
     def do_start_scoring(self, line):
-        """start scoring the eeg signal using the specified model"""
+        """start scoring the eeg signal."""
         self.start_scoring_signal.emit(True)
 
     def do_stop_scoring(self, line):
@@ -77,7 +85,6 @@ class SleepRecorderCLI(cmd.Cmd, QObject):
     def do_stop_webhook(self, line):
         """stop the webhook"""
         self.stop_webhook_signal.emit(True)
-        #self.headbandinterface.stop_webhook()
 
     def do_set_signaltype(self, line):
         """set the signals that should be recorded. pass as a comma separated numbers. For possible signals type 'show_possible_signals'"""

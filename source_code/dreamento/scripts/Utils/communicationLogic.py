@@ -71,7 +71,14 @@ class CommunicationLogic:
             # gracefully stop recording if it is running to allow saving files. When it is called only once from within the
             # class it has to receive a signal again to start saving. Therefore we do it here already
             self.hbif.stop_recording()
-            time.sleep(1)
+            print('recording was still running, quitting aborted and recording stopped. please try again later!')
+            return
+
+        if not self.hbif.recordingFinished:
+            print('did not receive the finished signal from the recorder thread yet. It may still be occupied with '
+                  'saving your files. \n If this takes longer than 20 minutes or you did not start a recording please '
+                  'file an issue at the github repository.')
+            return
 
         self.hbif.quit()
 

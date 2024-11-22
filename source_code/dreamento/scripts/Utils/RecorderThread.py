@@ -15,10 +15,8 @@ class RecordThread(QThread):
     sendEEGdata2MainWindow = pyqtSignal(object, object, int)
     sendEpochData2MainWindow = pyqtSignal(object, object, int)
 
-    def __init__(self, parent=None, signalType=None):
+    def __init__(self, parent=None, signalType=[0, 1, 5, 2, 3, 4]):
         super(RecordThread, self).__init__(parent)
-        if signalType is None:
-            signalType = [0, 1, 5, 2, 3, 4]
         self.model_CNNLSTM = None
         self.threadactive = True
         self.signalType = signalType  # "EEGR, EEGL, TEMP, DX, DY, DZ"
@@ -113,9 +111,7 @@ class RecordThread(QThread):
                     continue
 
             self.samples_db.append(self.dataSampleCounter)
-            #print(f'{self.dataSampleCounter} samples')
             if buffer2analyzeIsReady:
-                # send eeg data of last 30 seconds (30*256 samples) to mainWindow for plotting (spectrogram and periodogram) and sleep scoring
                 self.sendEEGdata2main(eegSigR=sigR_accumulative, eegSigL=sigL_accumulative)
                 dataSamplesToAnalyzeCounter = 0
                 buffer2analyzeIsReady = False
@@ -127,7 +123,7 @@ class RecordThread(QThread):
                     self.sendEpochForScoring2main(sendEEGr, sendEEGl, self.epochCounter)
 
             if self.threadactive is False:
-                break  # break the loop if record button is pressed again, recording stops
+                break
 
         actual_end_time = time.time()
         print(f'actual end time {actual_end_time}')
@@ -137,9 +133,6 @@ class RecordThread(QThread):
         print(f"actual {minute} minute, {seconds} seconds")
 
         self.save_edf(recording, cols, file_path)
-        np.savetxt(file_name, recording, delimiter=',')  # save recording as txt
-        print(f"Recording saved to {file_name}")
-        np.save(os.path.join(file_path, 'samples_db.npy'), self.samples_db)
 
         self.recordingFinishedSignal.emit(f"{file_path}\\{dt_string}")  # send path of recorded file to mainWindow
 
@@ -147,23 +140,24 @@ class RecordThread(QThread):
         self.threadactive = False
 
     def save_edf(self, signals: list, channels: list, path: str):
+        sig = np.array(signals)
         min_eeg_val = -1000000
         max_eeg_val = 1000000
 
-        # write an edf file
-        signals_reformatted = []
-        for idx, ch in enumerate(channels):
-            signals_reformatted.append([])
-            for s in signals:
-                val = s[idx]
-                if val < min_eeg_val:
-                    val = min_eeg_val
-                elif val > max_eeg_val:
-                    val = max_eeg_val
+        if len(signals) <= 1:
+            return
 
-                signals_reformatted[idx].append(val)
+        # write an edf file
+        signals_reformatted = sig[:].T
+        signals_reformatted = np.clip(signals_reformatted, min_eeg_val, max_eeg_val)
 
         channel_names = [str(ZmaxDataID(channel)) for channel in channels]
-        signal_headers = highlevel.make_signal_headers(channel_names, sample_frequency=256, physical_min=-1000000, physical_max=1000000)
+        signal_headers = highlevel.make_signal_headers(channel_names,
+                                                       sample_frequency=256,
+                                                       physical_min=-1000000,
+                                                       physical_max=1000000)
         header = highlevel.make_header(patientname='patient')
-        highlevel.write_edf(os.path.join(path, 'complete_recording.edf'), np.array(signals_reformatted), signal_headers, header)
+        highlevel.write_edf(os.path.join(path, 'complete_recording.edf'),
+                            signals_reformatted,
+                            signal_headers,
+                            header)

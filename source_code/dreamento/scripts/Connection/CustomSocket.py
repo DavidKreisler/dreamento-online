@@ -2,6 +2,7 @@ import os
 import socket
 import struct
 import ctypes
+import time
 
 
 def is_admin():
@@ -43,8 +44,13 @@ class CustomSocket:
         raise NotImplementedError('sending is not possible with a socket.SOCK_RAW')
 
     def read_socket_buffer_for_port(self, port=8000):
+        time_start = time.time()
         # Receive a packet
         while True:
+            if (time.time() - time_start) >= 5:
+                print(f'it seems there is no data available at port {port}')
+                return ''
+
             packet, addr = self.sock.recvfrom(65565)
 
             # Extract IP header

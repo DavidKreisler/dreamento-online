@@ -28,11 +28,8 @@ class HBRecorderInterface:
 
         self.isRecording = False
         self.firstRecording = True
+        self.recordingFinished = True
 
-        # stimulations
-        self.stimulationDataBase = {}  # have info of all triggered stimulations
-
-        #self.inferenceModel = None
         self.scoring_predictions = []
         self.epochCounter = 0
 
@@ -68,9 +65,11 @@ class HBRecorderInterface:
         self.recorderThread.start()
 
         self.recorderThread.finished.connect(self.on_recording_finished)
-        self.recorderThread.recordingFinishedSignal.connect(self.on_recording_finished_write_stimulation_db)
+        self.recorderThread.recordingFinishedSignal.connect(self.on_recording_finished_write_predictions)
         self.recorderThread.sendEEGdata2MainWindow.connect(self.getEEG_from_thread)
         self.recorderThread.sendEpochData2MainWindow.connect(self.get_epoch_for_scoring)
+
+        self.recordingFinished = False
 
         print('recording started')
 
@@ -92,17 +91,10 @@ class HBRecorderInterface:
             requests.post(self.webHookBaseAdress + 'finished')
         print('recording finished')
 
-    def on_recording_finished_write_stimulation_db(self, fileName):
-        print('on_recording_finished called')
-        # save triggered stimulation information on disk:
-        with open(f'{fileName}-markers.json', 'w') as fp:
-            json.dump(self.stimulationDataBase, fp, indent=4, separators=(',', ': '))
-
-        with open(f"{fileName}-predictions.txt", "a") as outfile:
-            if self.scoring_predictions:
-                # stagesList = ['W', 'N1', 'N2', 'N3', 'REM', 'MOVE', 'UNK']
-                self.scoring_predictions.insert(0, (
-                datetime.now(), -1))  # first epoch is not predicted, therefore put -1 instead
+    def on_recording_finished_write_predictions(self, fileName):
+        self.recordingFinished = True
+        if self.scoring_predictions:
+            with open(f"{fileName}-predictions.txt", "a") as outfile:
                 outfile.write("\n".join(str(time) + ': ' + str(item) for time, item in self.scoring_predictions))
 
     def start_scoring(self):
@@ -160,7 +152,7 @@ class HBRecorderInterface:
             requests.post(self.webHookBaseAdress + 'hello', data={'hello': 'hello'})
             self.webhookActive = True
         except Exception as e:
-            print(e)
+            #print(e)
             print('webhook seems to be offline. not activating')
             return
         print('webhook started')
