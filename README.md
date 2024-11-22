@@ -1,15 +1,7 @@
-# dreamento
+# Drec-DreamRecorder
 
-This repository contains an implementation of the **dreamento online**, altered from this (https://github.com/dreamento/dreamento) repository.
-
-Before you use this repository I suggest you visit the original one and follow the instructions there.
-
-We changed the model for sleep scoring (since we were not able to find the trained checkpoints for the model used in dreamento) to SleePyCo from https://github.com/gist-ailab/SleePyCo and made it fit our architecture. 
-
-For citation please make sure you follow the original repository's suggestions!
-
-## changes from the original repository
-The TCP socket implemented in dreamento made problems in that the program was not able to read data from it. Therefore I implemented a raw socket to read the data. 
+This repository was originally based on dreamento (accessed from https://github.com/dreamento/dreamento, mid 2024). 
+It has developed into a standalone project for **eeg recording** of the signal captured by a ZMax Headband (by Hypnodyne) and **scoring** the eeg signal using the **yasa** library. Additionally the option to send the scoring to a separate **webhook** is implemented, to allow to control external (audio, visual, ...) impulses or applications.
 
 ## TODO:
 - [X] implement always responsive console
@@ -22,17 +14,25 @@ The TCP socket implemented in dreamento made problems in that the program was no
   - [X] for eeg singal
   - [X] for automatic scoring prediction  
 - [ ] implement automatic scoring
-  - [X] implement the sleepyco model instead of tinysleep
-  - [X] test sleepyco model on our custom data. make sure the sampling frequency is not hard coded somewhere in there
+  - [X] yasa
+  - [ ] test model
 - [X] implement webhook
   - [X] for sleep scoring prediction
   - [X] for epoch
 - [ ] bugfixes
-  - [ ] when terminating the program gets stuck. probably has to do with threads
   - [ ] the window opened with show_signal can crashes the app when moved or resized incorrectly
-- [ ] record a night and the scoring. Let this recording score by the HDScorer and compare.
+  - [ ] when terminating the program after show_signal was called the program gets stuck. probably has to do with threads -> solution: remove show_signal
+- [ ] record test night and validate scoring
+- [ ] remove warning message at startup
 ## requirements
 - python 3.6
+- libraries:
+  - PyQt5==5.15.6
+  - mne==0.23.4
+  - yasa==0.5.1
+  - pyEDFlib==0.1.38
+  - torch==1.10.2
+  - pyqtgraph==0.11.1
 
 all the following steps describe the procedure for the windows operating system. On other os the commands may differ slightly.
 
@@ -48,27 +48,10 @@ activate the venv:
 make sure pip is upgraded:
   python -m pip install --upgrade pip
 
-install the requirements from requirements.txt located in the repository:
+install the requirements from requirements.txt located in the repository or install the required ones manually:
   python -m pip install -r requirements.txt
 
-run mainwindow.py from your cmd that has the venv activated
-
-## create an executable from scripts
-activate the venv:
-    run the activate.bat file from your cmd located at /path/to/venv/Scripts/activate.bat
-
-run the command:
-  pyinstall mainwindow.py
-
-a directory called dist will be created with a subdirectory called mainwindow. 
-
-copy the 'resources' and 'lspopt' directory from the source code directory into the dist/mainwidnow directory. 
-
-double click the mainwindow.exe to run
-  
-wait. it may take a minute or 2 for the application to start.
-If it starts and closes immediatly run the mainwindow.exe from a cmd and see the output. 
+run mainconsole.py from your cmd that has the venv activated
 
 ## usage
-make sure **HDServer** and **HDRecorder** from hypnodyne are running. 
-Without the HDServer the connection wont work, without the HDRecorder the record timer will freeze at 1 second and with it the whole program will!
+make sure **HDServer** from hypnodyne is running. 
