@@ -26,26 +26,11 @@ run mainconsole.py from your cmd that has the venv activated
 make sure **HDServer** from hypnodyne is running. 
 
 ## TODO:
-- [X] implement always responsive console
-- [X] implement recorder
-  - [X] connect to software 
-  - [X] receive data from socket
-  - [X] Pack the data received from the socket into 256 chunks, since the sample frequency is 256 and we want to structure it by seconds -> not necessary, since the server sends it in this manner.
-  - [ ] when saving save the metadate, e.g. what signals are recorded. This is a program setting, therefore relevant
-- [X] implement visualization
-  - [X] for eeg singal
-  - [X] for automatic scoring prediction  
-- [ ] implement automatic scoring
-  - [X] yasa
-  - [ ] test model
-- [X] implement webhook
-  - [X] for sleep scoring prediction
-  - [X] for epoch
+- [ ] implement 'offline' version, that allows to score previous recordings
+- [ ] when saving save the metadata, e.g. what signals are recorded. This is a program setting, therefore relevant
 - [ ] bugfixes
   - [ ] the window opened with show_signal can crashes the app when moved or resized incorrectly
   - [ ] when terminating the program after show_signal was called the program gets stuck. probably has to do with threads -> solution: remove show_signal
-- [ ] record test night and validate scoring
-- [ ] remove warning message at startup
 ## requirements
 - python 3.6
 - libraries:
