@@ -18,21 +18,25 @@ It has developed into a standalone project for **eeg recording** of the signal c
 ## run from scripts
 all the following steps describe the procedure for the windows operating system. On other os the commands may differ slightly.
 
-clone the repository
+1. clone the repository
 
-create a virtual env:
-  python -m venv /path/to/wherever/you/want/it/to/live/
-
-activate the venv:
-  run the activate.bat file from your cmd located at /path/to/venv/Scripts/activate.bat
+2. create a virtual env (in cmd):
+```python -m venv /path/to/wherever/you/want/it/to/live/```
+3. activate the venv:
+run the activate.bat file from your cmd located at /path/to/venv/Scripts/activate.bat
   
-make sure pip is upgraded:
-  python -m pip install --upgrade pip
-
-install the requirements from requirements.txt located in the repository or install the required ones manually:
-  python -m pip install -r requirements.txt
-
-run mainconsole.py from your cmd that has the venv activated
+4. make sure pip is upgraded:
+```python -m pip install --upgrade pip```
+5. install the requirements:
+- from requirements.txt located in the repository or
+- install the required ones manually 
+```python -m pip install -r requirements.txt```
+or
+```python -m pip install <package==version>```
+6. run mainconsole.py from your cmd that has the venv activated
+```
+python mainconsole.py
+```
 
 ## usage
 make sure **HDServer** from hypnodyne is running. 
