@@ -23,12 +23,15 @@ all the following steps describe the procedure for the windows operating system.
 
 2. create a virtual env (in cmd):
 ```python -m venv /path/to/wherever/you/want/it/to/live/```
-3. activate the venv:
+if multiple python versions are installed a specific can be used py typing
+```python -3.11```
+
+4. activate the venv:
 run the activate.bat file from your cmd located at /path/to/venv/Scripts/activate.bat
   
-4. make sure pip is upgraded:
+5. make sure pip is upgraded:
 ```python -m pip install --upgrade pip```
-5. install the requirements:
+6. install the requirements:
 - from requirements.txt located in the repository or
 - install the required ones manually 
 ```python -m pip install -r requirements.txt```
