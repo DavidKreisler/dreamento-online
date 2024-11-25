@@ -22,7 +22,7 @@ all the following steps describe the procedure for the windows operating system.
 1. clone the repository
 
 2. create a virtual env (in cmd):
-```python -m venv /path/to/wherever/you/want/it/to/live/```
+```python -m venv /path/to/wherever/you/want/it/to/live/```.
 if multiple python versions are installed a specific can be used py typing
 ```python -3.11```
 
