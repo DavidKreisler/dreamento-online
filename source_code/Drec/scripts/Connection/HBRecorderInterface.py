@@ -1,13 +1,9 @@
 import mne
-import yasa
-from datetime import datetime, timedelta
-import os
-import json
+from datetime import datetime
 import requests
 
 from scripts.Connection.ZmaxHeadband import ZmaxHeadband
 from scripts.Utils.RecorderThread import RecordThread
-from scripts.UI.EEGPlotWindow import EEGVisThread
 
 from source_code.Drec.scripts.Utils.yasa_functions import YasaClassifier
 
@@ -34,9 +30,6 @@ class HBRecorderInterface:
 
         self.scoring_predictions = []
         self.epochCounter = 0
-
-        # visualization
-        self.eegThread = None
 
         # program parameters
         self.scoreSleep = False
@@ -140,15 +133,6 @@ class HBRecorderInterface:
             sigL = eegSignal_l
             t = [number / self.sample_rate for number in range(len(eegSignal_r))]
             self.eegThread.update_plot(t, sigR, sigL)
-
-    def show_eeg_signal(self):
-        if not self.eegThread:
-            self.eegThread = EEGVisThread()
-
-        if self.eegThread.is_alive():
-            self.eegThread.stop()
-        else:
-            self.eegThread.start()
 
     def start_webhook(self):
         try:

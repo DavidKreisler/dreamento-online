@@ -27,7 +27,6 @@ class CommunicationLogic:
         self.cliThread.cli.connect_signal.connect(self.connectHeadband)
         self.cliThread.cli.start_signal.connect(self.startRecording)
         self.cliThread.cli.stop_signal.connect(self.stopRecording)
-        self.cliThread.cli.show_eeg_signal.connect(self.showEEG)
         self.cliThread.cli.start_scoring_signal.connect(self.startScoring)
         self.cliThread.cli.stop_scoring_signal.connect(self.stopScoring)
         self.cliThread.cli.start_webhook_signal.connect(self.startWebhook)
@@ -46,9 +45,6 @@ class CommunicationLogic:
 
     def stopRecording(self):
         self.hbif.stop_recording()
-
-    def showEEG(self):
-        self.hbif.show_eeg_signal()
 
     def startScoring(self):
         self.hbif.start_scoring()

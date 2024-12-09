@@ -22,7 +22,6 @@ class SleepRecorderCLI(cmd.Cmd, QObject):
     connect_signal = pyqtSignal(bool)
     start_signal = pyqtSignal(bool)
     stop_signal = pyqtSignal(bool)
-    show_eeg_signal = pyqtSignal(bool)
     start_scoring_signal = pyqtSignal(bool)
     stop_scoring_signal = pyqtSignal(bool)
     start_webhook_signal = pyqtSignal(bool)
@@ -63,12 +62,6 @@ class SleepRecorderCLI(cmd.Cmd, QObject):
     def do_start_recording(self, line):
         """Start the recoring"""
         self.start_signal.emit(True)
-
-    def do_show_signal(self, line):
-        """Development feature! do not use when recording! Shows the eeg signal. This is a experimental feature, known to have bugs and preventing the application from
-        terminating. It should not interfere with recording, but resize and move the window carefully and slowly. It
-        crashes the whole application sometimes."""
-        self.show_eeg_signal.emit(True)
 
     def do_start_scoring(self, line):
         """start scoring the eeg signal."""
