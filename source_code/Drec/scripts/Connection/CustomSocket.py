@@ -4,6 +4,8 @@ import struct
 import ctypes
 import time
 
+from scripts.Connection.TCP_Packet import TCP_Packet
+
 
 def is_admin():
     try:
@@ -13,13 +15,20 @@ def is_admin():
 
 
 class CustomSocket:
-    def __init__(self, sock=None):
+    def __init__(self, sock=None, port=8000):
         if not is_admin():
             raise EnvironmentError('program has to be launched as admin')
 
         self.serverConnected = False
         if sock is None:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_IP)
+
+        self.port = port
+
+        self.packet_buffer = {}
+        self.last_seq_number = None
+        self.expected_seq_number = None
+        self.ordered_data = b''
 
     def sendString(self, msg):
         print('sending is not allowed in this class. It solely reads the transmition on a socket.')
@@ -43,12 +52,12 @@ class CustomSocket:
     def send(self, msg):
         raise NotImplementedError('sending is not possible with a socket.SOCK_RAW')
 
-    def read_socket_buffer_for_port(self, port=8000):
+    def read_socket_buffer_for_port(self):
         time_start = time.time()
         # Receive a packet
         while True:
             if (time.time() - time_start) >= 5:
-                print(f'it seems there is no data available at port {port}')
+                print(f'it seems there is no data available at port {self.port}')
                 return ''
 
             packet, addr = self.sock.recvfrom(65565)
@@ -69,26 +78,54 @@ class CustomSocket:
 
             # Extract TCP header if protocol is TCP
             if protocol == 6:
-                tcp_header = packet[iph_length:iph_length + 20]
-                tcph = struct.unpack('!HHLLBBHHH', tcp_header)
+                tcp_packet = TCP_Packet(packet, iph_length)
+                if tcp_packet.source_port == self.port:
+                    ret = self._handle_tcp_packet(tcp_packet)
+                    return ret
 
-                source_port = tcph[0]
-                dest_port = tcph[1]
-                sequence = tcph[2]
-                acknowledgment = tcph[3]
-                doff_reserved = tcph[4]
-                tcph_length = doff_reserved >> 4
-                tcp_header_length = tcph_length * 4
+    def _process_payload(self, payload):
+        ret = payload.decode()
+        return ret
 
-                if (source_port == port) or (dest_port == port):
-                    # Get data if available
-                    data_offset = iph_length + tcp_header_length
-                    data = packet[data_offset:]
-                    if not data:
-                        return ''
-                    return data.decode()
+    def _handle_tcp_packet(self, packet: TCP_Packet):
+        if not packet.data:
+            return ''
+
+        # SEQ handling
+        if self.expected_seq_number is None:
+            # Initialize expected sequence number
+            self.expected_seq_number = packet.sequence + len(packet.data)
+            ret = self._process_payload(packet.data)
+            return ret
+
+        elif packet.sequence == self.expected_seq_number:
+            # Process in-order packet
+            accumulated_data = self._process_payload(packet.data)
+            self.expected_seq_number += len(packet.data)
+
+            # Check for subsequent buffered packets
+            while self.expected_seq_number in self.packet_buffer:
+                buffered_payload = self.packet_buffer.pop(self.expected_seq_number)
+                accumulated_data.append(self._process_payload(buffered_payload))
+                self.expected_seq_number += len(buffered_payload)
+
+            return accumulated_data
+
+        elif packet.sequence > self.expected_seq_number:
+            # Buffer out-of-order packet
+            self.packet_buffer[packet.sequence] = packet.data
+            return ''
+
+        else:
+            print('past packet!')
+            print(self.expected_seq_number, packet.sequence)
+            return ''
+
 
 
 if __name__ == '__main__':
     sock = CustomSocket()
-    print(sock.serverConnected)
+    sock.connect('127.0.0.1', 8000)
+    while True:
+        data = sock.read_socket_buffer_for_port()
+        print(data)
