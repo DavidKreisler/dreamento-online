@@ -15,8 +15,10 @@ class RecordThread(QThread):
     sendEEGdata2MainWindow = pyqtSignal(object, object, int)
     sendEpochData2MainWindow = pyqtSignal(object, object, int)
 
-    def __init__(self, parent=None, signalType=[0, 1, 5, 2, 3, 4]):
+    def __init__(self, parent=None, signalType=None):
         super(RecordThread, self).__init__(parent)
+        if signalType is None:
+            signalType = [0, 1, 5, 2, 3, 4]
         self.model_CNNLSTM = None
         self.threadactive = True
         self.signalType = signalType  # "EEGR, EEGL, TEMP, DX, DY, DZ"
@@ -27,6 +29,7 @@ class RecordThread(QThread):
         self.epochCounter = 0
         self.samples_db = []
         self.sample_rate = 256
+        self.epochs_before_scoring = 120 * 2
 
     def sendData2main(self, data=None, columns=None):
         self.sendData2MainWindow.emit(data, columns)
@@ -38,19 +41,15 @@ class RecordThread(QThread):
         self.sendEpochData2MainWindow.emit(eegSigR, eegSigL, epochCounter)
 
     def run(self):
-        # This part of the cord RECORDS signal.
-        # In each second, also calculates the sampling rate (# of samples received by program over stream)
         recording = []
         cols = self.signalType
         cols.extend([998, 999])  # add two columns for sample number, sample time
-        # cols = [ZmaxDataID.eegr.value, ZmaxDataID.eegl.value, ZmaxDataID.bodytemp.value, 999, 999]  # eegr, eegl, temp, sample number, sample time
         recording.append(cols)  # first row of received data is the col_id. eg: 0 => eegr
         hb = ZmaxHeadband()  # create a new client on the server, therefore we use it only for reading the stream
 
         now = datetime.now()  # for file name
         dt_string = now.strftime("recording-date-%Y-%m-%d-time-%H-%M-%S")
         file_path = f".\\recordings\\{dt_string}"
-        file_name = f"{file_path}\\complete.txt"
         Path(f"{file_path}").mkdir(parents=True, exist_ok=True)  # ensures directory exists
 
         actual_start_time = time.time()
@@ -59,7 +58,7 @@ class RecordThread(QThread):
         buffer2analyzeIsReady = False
         sendEpochForScoring = False
         dataSamplesToAnalyzeCounter = 0  # count samples, when reach 30*256, feed all to deep learning model
-        dataSamplesToAnalyzeBeginIndex = 0
+
         self.secondCounter = 0
         self.epochCounter = 0  # each epoch is 30 seconds
 
@@ -90,7 +89,7 @@ class RecordThread(QThread):
                         if not buffer2analyzeIsReady:
                             if self.secondCounter >= 2:  # ignore 1st second for analysis, because it is unstable
                                 dataSamplesToAnalyzeCounter += 1
-                                if dataSamplesToAnalyzeCounter == 1:  # x[dataSamplesToAnalyzeIDXbegin:dataSamplesToAnalyzeIDXbegin+30*256]
+                                if dataSamplesToAnalyzeCounter == 1:
                                     sigR_accumulative = []
                                     sigL_accumulative = []
 
@@ -98,7 +97,7 @@ class RecordThread(QThread):
                                     sigR_accumulative.append(line[ZmaxDataID.eegr.value])
                                     sigL_accumulative.append(line[ZmaxDataID.eegl.value])
 
-                                    if dataSamplesToAnalyzeCounter % self.sample_rate/2 == 0:  # send EEG data for plotting to mainWindow
+                                    if dataSamplesToAnalyzeCounter % self.sample_rate == 0:  # send EEG data for plotting to mainWindow
                                         self.sendEEGdata2main(eegSigR=sigR_accumulative, eegSigL=sigL_accumulative)
 
                                 else:
@@ -117,9 +116,10 @@ class RecordThread(QThread):
                 buffer2analyzeIsReady = False
 
             if sendEpochForScoring:
-                if self.secondCounter % 15 == 0 and self.epochCounter >= 10:
-                    sendEEGr = [sample[0] for sample in recording[-(5 * 60 * self.sample_rate):]]
-                    sendEEGl = [sample[1] for sample in recording[-(5 * 60 * self.sample_rate):]]
+                # send every 30 seconds and only after two hours
+                if self.secondCounter % 30 == 0 and self.epochCounter >= self.epochs_before_scoring:
+                    sendEEGr = [sample[0] for sample in recording[-(120 * 60 * self.sample_rate):]]
+                    sendEEGl = [sample[1] for sample in recording[-(120 * 60 * self.sample_rate):]]
                     self.sendEpochForScoring2main(sendEEGr, sendEEGl, self.epochCounter)
 
             if self.threadactive is False:

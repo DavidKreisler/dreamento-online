@@ -9,6 +9,8 @@ from scripts.Connection.ZmaxHeadband import ZmaxHeadband
 from scripts.Utils.RecorderThread import RecordThread
 from scripts.UI.EEGPlotWindow import EEGVisThread
 
+from source_code.Drec.scripts.Utils.yasa_functions import YasaClassifier
+
 
 class HBRecorderInterface:
     def __init__(self):
@@ -108,17 +110,18 @@ class HBRecorderInterface:
     def get_epoch_for_scoring(self, eegSigr=None, eegSigl=None, epochCounter=0):
         if self.scoreSleep:
             # inference
-            if len(eegSigr) >= 5 * 60 * self.sample_rate:  # only when minimum of 5 mins of signal have been sent.
-                # to perform sleep scoring of a 5 min single channel signal
-                info = mne.create_info(ch_names=['FPZ-F7'], sfreq=256, ch_types='eeg')
-                mne_array = mne.io.RawArray([eegSigr], info)
+            if len(eegSigr) >= 90 * 60 * self.sample_rate:  # only when minimum of 90 mins of signal have been
+                # sent, for performance.
 
-                y_pred = yasa.SleepStaging(mne_array, eeg_name="FPZ-F7").predict()
+                info = mne.create_info(ch_names=['eegr', 'eegl'], sfreq=256, ch_types='eeg')
+                mne_array = mne.io.RawArray([eegSigr, eegSigl], info)
 
-                # since this happens every 15 seconds we are only interested in the period from 2:30 to 3:00 in the signal
-                # the rest of the interval is needed by the yasa module as context
-                predictionToTransmit = y_pred[5]
-                self.scoring_predictions.append((datetime.now() - timedelta(minutes=2), predictionToTransmit))
+                sleep_stages = YasaClassifier.get_preds_per_epoch(mne_array, 'eegl')
+
+                predictionToTransmit = sleep_stages[-1]
+                self.scoring_predictions.append((datetime.now(),
+                                                 epochCounter,
+                                                 predictionToTransmit))
 
                 if self.webhookActive:
                     data = {'state': predictionToTransmit,
