@@ -1,11 +1,9 @@
-import time
-
 import sys
 
 from PyQt5.QtWidgets import QApplication
-from scripts.UI.CLI import CLIThread
 
-from scripts.Connection.HBRecorderInterface import HBRecorderInterface
+from scripts.UI.CLI import CLIThread
+from scripts.Logic.HBRecorderInterface import HBRecorderInterface
 
 
 class CommunicationLogic:

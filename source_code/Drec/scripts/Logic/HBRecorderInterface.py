@@ -3,9 +3,8 @@ from datetime import datetime
 import requests
 
 from scripts.Connection.ZmaxHeadband import ZmaxHeadband
-from scripts.Utils.RecorderThread import RecordThread
-
-from source_code.Drec.scripts.Utils.yasa_functions import YasaClassifier
+from scripts.Logic.RecorderThread import RecordThread
+from scripts.Utils.yasa_functions import YasaClassifier
 
 
 class HBRecorderInterface:

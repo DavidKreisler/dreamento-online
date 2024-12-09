@@ -2,7 +2,6 @@ import mne.io
 import numpy as np
 import pandas as pd
 import yasa
-from matplotlib import pyplot as plt
 from scipy.signal import welch
 import warnings
 

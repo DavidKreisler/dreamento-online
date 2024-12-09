@@ -4,7 +4,7 @@ import struct
 import ctypes
 import time
 
-from scripts.Connection.TCP_Packet import TCP_Packet
+from scripts.Utils.TCP_Packet import TCP_Packet
 
 
 def is_admin():
