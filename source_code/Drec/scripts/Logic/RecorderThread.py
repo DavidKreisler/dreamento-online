@@ -8,6 +8,8 @@ from pyedflib import highlevel
 
 from scripts.Connection.ZmaxHeadband import ZmaxDataID, ZmaxHeadband
 
+from scripts.Utils.Logger import Logger
+
 
 class RecordThread(QThread):
     recordingProgessSignal = pyqtSignal(int)  # a sending signal to mainWindow - sends time info of ongoing recording to mainWindow
@@ -62,13 +64,12 @@ class RecordThread(QThread):
         self.secondCounter = 0
         self.epochCounter = 0  # each epoch is 30 seconds
 
-        sigR_accumulative = []  # accumulate 256*30 data samples and empty it afterward
-        sigL_accumulative = []
-
         while True:
-            if self.epochCounter % 60 == 0 and dataSamplesToAnalyzeCounter == 0:
+            """if self.epochCounter % 60 == 0 and dataSamplesToAnalyzeCounter == 0:
+                print('del hb')
                 del hb
                 hb = ZmaxHeadband()
+            """
 
             self.dataSampleCounter = 0  # count samples in each second
             self.secondCounter += 1
@@ -78,8 +79,13 @@ class RecordThread(QThread):
             t_end = time.time() + 1
 
             while time.time() < t_end:
-                x = hb.read(cols[:-2])
+                try:
+                    x = hb.read(cols[:-2])
+                except Exception as e:
+                    Logger().log('error at hb.read()', 'ERROR')
+                    Logger().log(e, 'ERROR')
                 if x:
+                    Logger().log(f'{len(x)} lines received', 'DEBUG')
                     for line in x:
                         dataEntry = line
                         dataEntry.extend([self.dataSampleCounter, self.secondCounter])
@@ -89,40 +95,32 @@ class RecordThread(QThread):
                         if not buffer2analyzeIsReady:
                             if self.secondCounter >= 2:  # ignore 1st second for analysis, because it is unstable
                                 dataSamplesToAnalyzeCounter += 1
-                                if dataSamplesToAnalyzeCounter == 1:
-                                    sigR_accumulative = []
-                                    sigL_accumulative = []
 
-                                if dataSamplesToAnalyzeCounter <= 30 * self.sample_rate:
-                                    sigR_accumulative.append(line[ZmaxDataID.eegr.value])
-                                    sigL_accumulative.append(line[ZmaxDataID.eegl.value])
-
-                                    if dataSamplesToAnalyzeCounter % self.sample_rate == 0:  # send EEG data for plotting to mainWindow
-                                        self.sendEEGdata2main(eegSigR=sigR_accumulative, eegSigL=sigL_accumulative)
-
-                                else:
+                                if dataSamplesToAnalyzeCounter > 30 * self.sample_rate:
                                     buffer2analyzeIsReady = True
                                     sendEpochForScoring = True
                                     self.epochCounter += 1
 
                 else:
                     #print("[] data")
+                    Logger().log('no data available at hb.read()', 'DEBUG')
                     continue
 
             self.samples_db.append(self.dataSampleCounter)
             if buffer2analyzeIsReady:
-                self.sendEEGdata2main(eegSigR=sigR_accumulative, eegSigL=sigL_accumulative)
                 dataSamplesToAnalyzeCounter = 0
                 buffer2analyzeIsReady = False
 
             if sendEpochForScoring:
                 # send every 30 seconds and only after two hours
                 if self.secondCounter % 30 == 0 and self.epochCounter >= self.epochs_before_scoring:
+                    Logger().log('sending epoch to main', 'DEBUG')
                     sendEEGr = [sample[0] for sample in recording[-(120 * 60 * self.sample_rate):]]
                     sendEEGl = [sample[1] for sample in recording[-(120 * 60 * self.sample_rate):]]
                     self.sendEpochForScoring2main(sendEEGr, sendEEGl, self.epochCounter)
 
             if self.threadactive is False:
+                Logger().log('Thread deactivated', 'DEBUG')
                 break
 
         actual_end_time = time.time()
@@ -143,14 +141,13 @@ class RecordThread(QThread):
         sig = np.array(signals)
         min_eeg_val = -1000000
         max_eeg_val = 1000000
-
         if len(signals) <= 1:
             return
 
         # write an edf file
         signals_reformatted = sig[:].T
         signals_reformatted = np.clip(signals_reformatted, min_eeg_val, max_eeg_val)
-
+        signals_reformatted = np.ascontiguousarray(signals_reformatted)
         channel_names = [str(ZmaxDataID(channel)) for channel in channels]
         signal_headers = highlevel.make_signal_headers(channel_names,
                                                        sample_frequency=256,

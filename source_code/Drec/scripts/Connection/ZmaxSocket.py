@@ -74,7 +74,6 @@ class ZmaxSocket:
                 chunks.append(chunk)
                 bytes_recd = bytes_recd + len(chunk)
 
-            #time.sleep(0.03)
         msg = b''.join(chunks)
         if type == 0:  # binary
             return msg

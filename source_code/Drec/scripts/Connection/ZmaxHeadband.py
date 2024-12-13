@@ -1,9 +1,12 @@
+import sys
+
 import numpy as np
 import time
 import enum
 
 from scripts.Connection.ZmaxSocket import ZmaxSocket
 from scripts.Connection.CustomSocket import CustomSocket
+from scripts.Utils.Logger import Logger
 
 
 class ZmaxDataID(enum.Enum):
@@ -35,15 +38,15 @@ def connect():
     # sendSocket: the standard TCP socket used to send data to the headband. (Normally we would read from that socket aswell, but reading seems not to work.
     # readSocket: a RAW socket, which reads everything but discards everything but the designated port and message structure.
 
-    sendSocket = ZmaxSocket()
+    #sendSocket = ZmaxSocket()
     readSocket = CustomSocket()
 
-    sendSocket.connect()
+    #sendSocket.connect()
     readSocket.connect()
-    if readSocket.serverConnected and sendSocket.serverConnected:
-        sendSocket.sendString('HELLO\n')
+    if readSocket.serverConnected:# and sendSocket.serverConnected:
+        #sendSocket.sendString('HELLO\n')
         time.sleep(0.3)  # sec
-        return readSocket, sendSocket
+        return readSocket, None # sendSocket
     else:
         return None, None
 
@@ -59,19 +62,21 @@ class ZmaxHeadband():
         self.readSocket, self.writeSocket = connect()
         self.msgn = 1  # message number for sending stimulation
 
-    def read(self, reqIDs=[0, 1]):
+    def read(self, reqIDs=None):
         """
         output refers to a list of lists of the desired outputs of the function for example [0,1,3] returns [[eegl, eegr, dy], [eegl, eegr, dy]]
         [0=eegr, 1=eegl, 2=dx, 3=dy, 4=dz, 5=bodytemp, 6=bat, 7=noise, 8=light, 9=nasal_l, 10=nasal_r, 11=oxy_ir_ac,
             12=oxy_r_ac, 13=oxy_dark_ac, 14=oxy_ir_dc, 15=oxy_r_dc, 16=oxy_dark_dc]
         """
+        if reqIDs is None:
+            reqIDs = [0, 1]
+
         reqVals = []
         buf = self.readSocket.read_socket_buffer_for_port()
-
+        #buf = self.writeSocket.receive_oneLineBuffer()
         for line in buf.split('\n'):
             if str.startswith(line, 'DEBUG'):  # ignore debugging messages from server
                 pass
-
             else:
                 if str.startswith(line, 'D'):  # only process data packets
                     p = line.split('.')

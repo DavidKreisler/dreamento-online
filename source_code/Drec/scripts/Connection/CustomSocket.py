@@ -5,6 +5,7 @@ import ctypes
 import time
 
 from scripts.Utils.TCP_Packet import TCP_Packet
+from scripts.Utils.Logger import Logger
 
 
 def is_admin():
@@ -33,7 +34,7 @@ class CustomSocket:
     def sendString(self, msg):
         print('sending is not allowed in this class. It solely reads the transmition on a socket.')
 
-    def connect(self, host='127.0.0.1', port=0):
+    def connect(self, host='127.0.0.1', port=8000):
         try:
             self.sock.bind((host, port))
             self.serverConnected = True
@@ -57,10 +58,15 @@ class CustomSocket:
         # Receive a packet
         while True:
             if (time.time() - time_start) >= 5:
+                Logger().log('No data available at port', 'WARNING')
                 print(f'it seems there is no data available at port {self.port}')
                 return ''
 
-            packet, addr = self.sock.recvfrom(65565)
+            try:
+                packet, addr = self.sock.recvfrom(65535)
+            except Exception as e:
+                Logger().log('CustomSocket.py: self.sock.recv resulted in an error', 'ERROR')
+                return ''
 
             # Extract IP header
             ip_header = packet[0:20]
@@ -81,6 +87,8 @@ class CustomSocket:
                 tcp_packet = TCP_Packet(packet, iph_length)
                 if tcp_packet.source_port == self.port:
                     ret = self._handle_tcp_packet(tcp_packet)
+                    if str.startswith(ret, 'F') or str.startswith(ret, 'E'):
+                        return ''
                     return ret
 
     def _process_payload(self, payload):
@@ -89,7 +97,7 @@ class CustomSocket:
 
     def _handle_tcp_packet(self, packet: TCP_Packet):
         if not packet.data:
-            return ''
+            return 'E.no data'
 
         # SEQ handling
         if self.expected_seq_number is None:
@@ -102,6 +110,7 @@ class CustomSocket:
             # Process in-order packet
             accumulated_data = self._process_payload(packet.data)
             self.expected_seq_number += len(packet.data)
+            self.expected_seq_number = self.expected_seq_number % (2**32)
 
             # Check for subsequent buffered packets
             while self.expected_seq_number in self.packet_buffer:
@@ -114,12 +123,11 @@ class CustomSocket:
         elif packet.sequence > self.expected_seq_number:
             # Buffer out-of-order packet
             self.packet_buffer[packet.sequence] = packet.data
-            return ''
+            return 'F.future packet'
 
         else:
-            print('past packet!')
-            print(self.expected_seq_number, packet.sequence)
-            return ''
+            Logger().log(f'Past packet received. Seq: {packet.sequence}, expected Seq: {self.expected_seq_number}', 'DEBUG')
+            return 'E.past packet'
 
 
 

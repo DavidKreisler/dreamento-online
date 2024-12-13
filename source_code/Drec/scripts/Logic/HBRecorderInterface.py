@@ -38,12 +38,13 @@ class HBRecorderInterface:
         self.webhookActive = False
 
     def connect_to_software(self):
-        self.hb = ZmaxHeadband()
-        if self.hb.readSocket is None or self.hb.writeSocket is None:  # HDServer is not running
+        temp_hb = ZmaxHeadband()
+        if temp_hb.readSocket is None: # or temp_hb.writeSocket is None:  # HDServer is not running
             print('Sockets can not be initialized.')
         else:
             self.isConnected = True
             print('Connected')
+            del temp_hb
 
     def start_recording(self):
         if self.isRecording:
@@ -60,7 +61,6 @@ class HBRecorderInterface:
 
         self.recorderThread.finished.connect(self.on_recording_finished)
         self.recorderThread.recordingFinishedSignal.connect(self.on_recording_finished_write_predictions)
-        self.recorderThread.sendEEGdata2MainWindow.connect(self.getEEG_from_thread)
         self.recorderThread.sendEpochData2MainWindow.connect(self.get_epoch_for_scoring)
 
         self.recordingFinished = False
@@ -124,15 +124,6 @@ class HBRecorderInterface:
                         print(e)
                         print('webhook is probably not available')
 
-    def getEEG_from_thread(self, eegSignal_r, eegSignal_l, epoch_counter=0):
-        self.epochCounter = epoch_counter
-
-        if self.eegThread and self.eegThread.is_alive():
-            sigR = eegSignal_r
-            sigL = eegSignal_l
-            t = [number / self.sample_rate for number in range(len(eegSignal_r))]
-            self.eegThread.update_plot(t, sigR, sigL)
-
     def start_webhook(self):
         try:
             requests.post(self.webHookBaseAdress + 'hello', data={'hello': 'hello'})
@@ -153,7 +144,3 @@ class HBRecorderInterface:
     def quit(self):
         if self.recorderThread:
             self.stop_recording()
-
-        if self.eegThread and self.eegThread.isRunning():
-            self.eegThread.stop()
-            self.eegThread.quit()

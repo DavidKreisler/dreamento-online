@@ -1,4 +1,4 @@
-from source_code.Drec.scripts.Logic.communicationLogic import CommunicationLogic
+from scripts.Logic.communicationLogic import CommunicationLogic
 
 
 def main():
