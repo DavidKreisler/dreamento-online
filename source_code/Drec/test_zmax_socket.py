@@ -1,6 +1,6 @@
 import datetime
 
-from source_code.Drec.scripts.Connection.ZmaxSocket import ZmaxSocket
+from scripts.Connection.ZmaxSocket import ZmaxSocket
 
 
 def test_with_zmax_socket():
