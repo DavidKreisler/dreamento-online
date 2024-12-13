@@ -1,5 +1,5 @@
 import datetime
-from source_code.Drec.scripts.Connection.CustomSocket import CustomSocket
+from scripts.Connection.CustomSocket import CustomSocket
 
 
 def test_with_own_socket():
