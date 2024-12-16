@@ -39,7 +39,7 @@ class HBRecorderInterface:
 
     def connect_to_software(self):
         temp_hb = ZmaxHeadband()
-        if temp_hb.readSocket is None: # or temp_hb.writeSocket is None:  # HDServer is not running
+        if temp_hb.sock is None:
             print('Sockets can not be initialized.')
         else:
             self.isConnected = True
