@@ -4,8 +4,6 @@ import numpy as np
 import time
 import enum
 
-from scripts.Connection.ZmaxSocket import ZmaxSocket
-from scripts.Connection.CustomSocket import CustomSocket
 from scripts.Connection.TcpSniffSocket import TcpSniffSocket
 from scripts.Utils.Logger import Logger
 
