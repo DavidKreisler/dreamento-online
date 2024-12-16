@@ -6,6 +6,7 @@ import enum
 
 from scripts.Connection.ZmaxSocket import ZmaxSocket
 from scripts.Connection.CustomSocket import CustomSocket
+from scripts.Connection.TcpSniffSocket import TcpSniffSocket
 from scripts.Utils.Logger import Logger
 
 
@@ -35,20 +36,9 @@ class ZmaxDataID(enum.Enum):
 
 
 def connect():
-    # sendSocket: the standard TCP socket used to send data to the headband. (Normally we would read from that socket aswell, but reading seems not to work.
-    # readSocket: a RAW socket, which reads everything but discards everything but the designated port and message structure.
-
-    #sendSocket = ZmaxSocket()
-    readSocket = CustomSocket()
-
-    #sendSocket.connect()
-    readSocket.connect()
-    if readSocket.serverConnected:# and sendSocket.serverConnected:
-        #sendSocket.sendString('HELLO\n')
-        time.sleep(0.3)  # sec
-        return readSocket, None # sendSocket
-    else:
-        return None, None
+    sock = TcpSniffSocket()
+    sock.connect()
+    return sock
 
 
 class ZmaxHeadband():
@@ -59,7 +49,7 @@ class ZmaxHeadband():
         self.buf_dx = np.zeros((self.buf_size, 1))
         self.buf_dy = np.zeros((self.buf_size, 1))
         self.buf_dz = np.zeros((self.buf_size, 1))
-        self.readSocket, self.writeSocket = connect()
+        self.sock = connect()
         self.msgn = 1  # message number for sending stimulation
 
     def read(self, reqIDs=None):
@@ -72,8 +62,7 @@ class ZmaxHeadband():
             reqIDs = [0, 1]
 
         reqVals = []
-        buf = self.readSocket.read_socket_buffer_for_port()
-        #buf = self.writeSocket.receive_oneLineBuffer()
+        buf = self.sock.read_one_line()
         for line in buf.split('\n'):
             if str.startswith(line, 'DEBUG'):  # ignore debugging messages from server
                 pass
