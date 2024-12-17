@@ -5,9 +5,7 @@ import yasa
 from scipy.signal import welch
 import warnings
 
-
 warnings.filterwarnings('ignore', message='Trying to unpickle estimator LabelEncoder from version 0.24.2 when *')
-
 
 class YasaClassifier:
 
@@ -65,7 +63,7 @@ class YasaClassifier:
     @staticmethod
     def get_bandpower_per_epoch(mne_array, window_size: int = 5, sf: int = 256, epoch_len: int = 30):
         # get epochs
-        _, epochs = yasa.sliding_window(mne_array.copy().get_data(units='V'), sf, window=epoch_len)
+        _, epochs = yasa.sliding_window(mne_array.copy().get_epoch_data(units='V'), sf, window=epoch_len)
 
         # calculate psd
         win = int(window_size * sf)
@@ -88,7 +86,7 @@ class YasaClassifier:
         data = mne_array.copy().pick(channels)
         preds_per_sample = yasa.hypno_str_to_int(predictions)
         preds_per_sample = yasa.hypno_upsample_to_data(hypno=preds_per_sample, sf_hypno=(1 / epoch_len_sec),
-                                                       data=data.get_data(), sf_data=sf)
+                                                       data=data.get_epoch_data(), sf_data=sf)
         return preds_per_sample
 
     @staticmethod
@@ -97,7 +95,7 @@ class YasaClassifier:
         hypno = None
         if predictions is not None and 'R' in predictions:
             hypno = YasaClassifier.get_preds_per_sample(predictions, data, channels)
-        loc, roc = data.get_data(units='uV')
+        loc, roc = data.get_epoch_data(units='uV')
         rem = yasa.rem_detect(loc, roc, sf, hypno=hypno, include=4, amplitude=(50, 325),
                               duration=(0.3, 1.2),
                               relative_prominence=0.8, freq_rem=(0.5, 5), remove_outliers=False, verbose='error')
@@ -133,7 +131,7 @@ def simulate_scoring_in_live(raw: mne.io.Raw, channel_l: str, channel_r: str, ma
     global eeg_bands
     signal = raw.copy()
     signal.pick([channel_l, channel_r])
-    ch_l, ch_r = signal.get_data()
+    ch_l, ch_r = signal.get_epoch_data()
 
     # simulate a signal that is received from second 0
     sf = 256

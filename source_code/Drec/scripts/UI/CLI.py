@@ -19,7 +19,6 @@ class SleepRecorderCLI(cmd.Cmd, QObject):
     prompt = '>> '
     intro = 'Welcome to the sleep recoder CLI. type "help" for all available commands and "help <cmd>" to see info on the specific command.'
 
-    connect_signal = pyqtSignal(bool)
     start_signal = pyqtSignal(bool)
     stop_signal = pyqtSignal(bool)
     start_scoring_signal = pyqtSignal(bool)
@@ -27,6 +26,7 @@ class SleepRecorderCLI(cmd.Cmd, QObject):
     start_webhook_signal = pyqtSignal(bool)
     stop_webhook_signal = pyqtSignal(bool)
     set_signaltype_signal = pyqtSignal(list)
+    set_scoring_delay_signal = pyqtSignal(int)
     quit_signal = pyqtSignal(bool)
 
     def __init__(self):
@@ -43,10 +43,6 @@ class SleepRecorderCLI(cmd.Cmd, QObject):
     def do_quit(self, line):
         """Exit the CLI."""
         self.quit_signal.emit(True)
-
-    def do_connect(self, line):
-        """Connect the recorder"""
-        self.connect_signal.emit(True)
 
     def do_start(self, line):
         """start the recoring, scoring and the webhook. If the webhook startup fails, the recording and scoring are
@@ -93,3 +89,11 @@ class SleepRecorderCLI(cmd.Cmd, QObject):
         """shows all possible eeg signals to be set by 'set_signaltype'."""
         mes = '[0=eegr, 1=eegl, 2=dx, 3=dy, 4=dz, 5=bodytemp, 6=bat, 7=noise, 8=light, 9=nasal_l, 10=nasal_r, 11=oxy_ir_ac, 12=oxy_r_ac, 13=oxy_dark_ac, 14=oxy_ir_dc, 15=oxy_r_dc, 16=oxy_dark_dc]'
         print(mes)
+
+    def do_set_scoring_delay(self, line):
+        """set the number of epochs to wait before scoring is started. Epoch length si 30 seconds. Min value is 10 (5 min)"""
+        try:
+            val = int(line)
+        except ValueError:
+            print(f'please provide a numer. "{line}" was not interpretable as integer.')
+

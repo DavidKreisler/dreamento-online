@@ -26,14 +26,14 @@ class Connection:
             return None
 
         # current packets
-        self.expected_seq += len(payload)
+        self.expected_seq = (self.expected_seq + len(payload)) % (2**32)
         data_queue.put(payload)
 
         # handle buffer
         while self.expected_seq in self.packet_buffer:
             buffered_payload = self.packet_buffer.pop(self.expected_seq)
             data_queue.put(buffered_payload)
-            self.expected_seq += len(buffered_payload)
+            self.expected_seq = (self.expected_seq + len(payload)) % (2 ** 32)
 
 
 if __name__ == "__main__":
