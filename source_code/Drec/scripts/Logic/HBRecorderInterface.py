@@ -106,9 +106,7 @@ class HBRecorderInterface:
 
     def get_epoch_data(self, data: list, epoch_counter: int):
         self.recording = np.concatenate((self.recording, data), axis=0)
-        print(len(self.recording))
         if self.scoreSleep and epoch_counter > self.scoring_delay:
-            print(f'in get_epoch_data: {epoch_counter}, {self.scoring_delay}')
             self._score_curr_data(epoch_counter)
 
         if self.webhookActive:  # Do this AFTER the scoring is done
@@ -117,9 +115,8 @@ class HBRecorderInterface:
     def _score_curr_data(self, epoch_counter):
         eegr = self.recording[:, 0]
         eegl = self.recording[:, 1]
-        print(len(eegr), len(eegl), len(eegr) / self.sample_rate)
-        info = mne.create_info(ch_names=['eegr', 'eegl'], sfreq=self.sample_rate, ch_types='eeg')
-        mne_array = mne.io.RawArray([eegr, eegl], info)
+        info = mne.create_info(ch_names=['eegr', 'eegl'], sfreq=self.sample_rate, ch_types='eeg', verbose='ERROR')
+        mne_array = mne.io.RawArray([eegr, eegl], info, verbose='ERROR')
 
         sleep_stages = YasaClassifier.get_preds_per_epoch(mne_array, 'eegl')
 
