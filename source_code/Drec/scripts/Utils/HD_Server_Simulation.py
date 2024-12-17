@@ -1,10 +1,8 @@
 import socket
 import threading
 import time
-import mne  # Install using `pip install mne`
+import mne
 import numpy as np
-
-from source_code.Drec.scripts.Utils.Logger import Logger
 
 
 class HD_Server_Sim:
@@ -182,9 +180,15 @@ class HD_Server_Sim:
               f"00-00-00-00-" \
               f"00-00-00-00-" \
               f"00-00-00-00-" \
-              f"00-00-00-" \
+              f"00-00-00" \
 
         return buf
+
+    def numberToWord(self, n):
+        if n <= 256:
+            return f'00-{self.dec2hex(n, pad=2)}'
+        message = f'{self.dec2hex(int(n / 256), pad=2)}-{self.dec2hex(int(n % 256), pad=2)}'
+        return message
 
     def descaleEEG(self, sig):  # uV to word value
         uvRange = 3952
@@ -193,43 +197,18 @@ class HD_Server_Sim:
         d = d + 32768
         return d
 
-    def numberToWord(self, n):
-        if n <= 256:
-            return f'00-{self.dec2hex(n, pad=2)}'
-        message = f'{self.dec2hex(int(n / 256), pad=2)}-{self.dec2hex(int(n % 256), pad=2)}'
-        return message
-
-    def getbyteat(self, buf, idx=0):
-        """
-        for example getbyteat("08-80-56-7F-EA",0) -> hex2dec(08)
-                    getbyteat("08-80-56-7F-EA",2) -> hex2dec(56)
-        """
-        s = buf[idx * 3:idx * 3 + 2]
-        return self.dec2hex(s)
-
-    def getwordat(self, buf, idx=0):
-        w = self.getbyteat(buf, idx) * 256 + self.getbyteat(buf, idx + 1)
-        return w
-
-    def ScaleEEG(self, e):  # word value to uV
-        uvRange = 3952
-        d = e - 32768
-        d = d * uvRange
-        d = d / 65536
+    def descaleAccel(self, sig):
+        d = (sig + 2) * 4096 / 4
         return d
 
-    def ScaleAccel(self, dx):  # word value to 'g'
-        d = dx * 4 / 4096 - 2
-        return d
+    def BatteryVoltage(self, v):  # Volts to word value
+        vbat = v / 6.60 * 1024
+        return vbat
 
-    def BatteryVoltage(self, vbat):  # word value to Volts
-        v = vbat / 1024 * 6.60
-        return v
-
-    def BodyTemp(self, bodytemp):  # word value to degrees C
-        v = bodytemp / 1024 * 3.3
-        t = 15 + ((v - 1.0446) / 0.0565537333333333)
-        return t
+    def BodyTemp(self, t):  # degree C to word value
+        a = ((t - 15) * 0.0565537333333333) + 1.0446
+        bodytemp = a * 1024 / 3.3
+        return bodytemp
 
     def hex2dec(self, s):
         """return the integer value of a hexadecimal string s"""

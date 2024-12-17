@@ -1,11 +1,9 @@
-import sys
+import time
 
 import numpy as np
-import time
 import enum
 
 from scripts.Connection.TcpSniffSocket import TcpSniffSocket
-from scripts.Utils.Logger import Logger
 
 
 class ZmaxDataID(enum.Enum):
@@ -100,7 +98,7 @@ class ZmaxHeadband():
                                 bodytemp = self.BodyTemp(bodytemp)
                                 bat = self.BatteryVoltage(bat)
                                 # for function return
-                                result = [eegr, eegl, dx, dy, dz, bodytemp, bat, noise, light, nasal_l, nasal_r, \
+                                result = [eegr, eegl, dx, dy, dz, bodytemp, bat, noise, light, nasal_l, nasal_r,
                                           oxy_ir_ac, oxy_r_ac, oxy_dark_ac, oxy_ir_dc, oxy_r_dc, oxy_dark_dc]
                                 vals = []
                                 for i in reqIDs:
@@ -108,6 +106,12 @@ class ZmaxHeadband():
                                 reqVals.append(vals)
 
         return reqVals
+
+    def stop(self):
+        self.sock.stop()
+
+    def __del__(self):
+        del self.sock
 
     def getbyteat(self, buf, idx=0):
         """
@@ -154,58 +158,16 @@ class ZmaxHeadband():
             # for example if pad = 3, the dec2hex(5,2) = '005'
             return s.rjust(pad, '0')
 
-    def stimulate(self, rgb1=(0, 0, 2), rgb2=(0, 0, 2), pwm1=254, pwm2=0, t1=1, t2=3, reps=5, vib=1, alt=0):
-        """
-        example:
-        LIVEMODE_SENDBYTES 15 6 111 04-00-00-02-00-00-02-FE-00-01-03-05-01-00\r\n
-        command = "LIVEMODE_SENDBYTES"
-        retries = 15
-        msgn = 6
-        retry_ms = 111
-        LIVECMD_FLASHLEDS = 04
-        r = 00
-        g = 00
-        b = 02
-        r2 = 00
-        g2 = 00
-        b2 = 02
-        pwm1 = FE (254); intensity from 2(1%) to 254(100%)
-        pwm2 = 00
-        t1 = 01
-        t2 = 03
-        reps = 05
-        vib = 01
-        alt = 00 # althernate eyes
-        """
-        command = "LIVEMODE_SENDBYTES"
-        retries = 15
-        retry_ms = 111
-        LIVECMD_FLASHLEDS = 4
-
-        i1 = self.dec2hex(LIVECMD_FLASHLEDS, pad=2)
-        i2 = self.dec2hex(rgb1[0], pad=2)
-        i3 = self.dec2hex(rgb1[1], pad=2)
-        i4 = self.dec2hex(rgb1[2], pad=2)
-        i5 = self.dec2hex(rgb2[0], pad=2)
-        i6 = self.dec2hex(rgb2[1], pad=2)
-        i7 = self.dec2hex(rgb2[2], pad=2)
-        i8 = self.dec2hex(pwm1, pad=2)
-        i9 = self.dec2hex(pwm2, pad=2)
-        i10 = self.dec2hex(t1, pad=2)
-        i11 = self.dec2hex(t2, pad=2)
-        i12 = self.dec2hex(reps, pad=2)
-        i13 = self.dec2hex(vib, pad=2)
-        i14 = self.dec2hex(alt, pad=2)
-
-        s = f"""{command} {retries} {self.msgn} {retry_ms} {i1}-{i2}-{i3}-{i4}\
--{i5}-{i6}-{i7}-{i8}-{i9}-{i10}-{i11}-{i12}-{i13}-{i14}\r\n"""
-        # print(s)
-        self.writeSocket.sendString(s)
-        self.msgn += 1
-
 
 if __name__ == '__main__':
     hb = ZmaxHeadband()
-    print(hb.readSocket)
-    print(hb.writeSocket)
-
+    i = 0
+    while True:
+        print(hb.read([0, 1]))
+        if i > 1000:
+            break
+        i += 1
+    hb.stop()
+    while True:
+        print(hb.read([0, 1]))
+        time.sleep(1)

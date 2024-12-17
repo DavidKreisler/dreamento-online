@@ -22,7 +22,6 @@ class CommunicationLogic:
 
     def _connectSignals(self):
         # CLI
-        self.cliThread.cli.connect_signal.connect(self.connectHeadband)
         self.cliThread.cli.start_signal.connect(self.startRecording)
         self.cliThread.cli.stop_signal.connect(self.stopRecording)
         self.cliThread.cli.start_scoring_signal.connect(self.startScoring)
@@ -30,16 +29,11 @@ class CommunicationLogic:
         self.cliThread.cli.start_webhook_signal.connect(self.startWebhook)
         self.cliThread.cli.stop_webhook_signal.connect(self.stopWebhook)
         self.cliThread.cli.set_signaltype_signal.connect(self.setSignaltype)
+        self.cliThread.cli.set_scoring_delay_signal.connect(self.setScoringDelay)
         self.cliThread.cli.quit_signal.connect(self.quit)
 
-    def connectHeadband(self, _: bool):
-        self.hbif.connect_to_software()
-
     def startRecording(self):
-        if self.hbif.isConnected:
-            self.hbif.start_recording()
-        else:
-            print('Not connected! call "connect" first.')
+        self.hbif.start_recording()
 
     def stopRecording(self):
         self.hbif.stop_recording()
@@ -58,6 +52,9 @@ class CommunicationLogic:
 
     def setSignaltype(self, signalTypes: list):
         self.hbif.set_signaltype(signalTypes)
+
+    def setScoringDelay(self, delay_in_epochs: int):
+        self.hbif.set_scoring_delay(delay_in_epochs)
 
     def quit(self, _: bool):
 

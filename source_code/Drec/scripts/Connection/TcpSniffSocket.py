@@ -12,24 +12,23 @@ class TcpSniffSocket:
         self.sniffer_thread = None
         self.connections = {}
         self.data_queue = Queue()
+        self.stop_sniffing = True
 
     def connect(self):
         self.sniffer_thread = threading.Thread(target=self._start_sniffer)
         self.sniffer_thread.daemon = True
         self.sniffer_thread.start()
+        self.stop_sniffing = False
 
     def read_live(self):
         while True:
             if not self.data_queue.empty():
                 print(self.data_queue.get())
 
-    def read(self):
-        accumulated_data = []
-        while not self.data_queue.empty():
-            accumulated_data.append(self.data_queue.get())
-        return '\r\n'.join(accumulated_data)
-
     def read_one_line(self):
+        if self.stop_sniffing:
+            return ''
+
         while self.data_queue.empty():
             time.sleep(0.1)
         return self.data_queue.get().decode("utf-8")
@@ -40,6 +39,7 @@ class TcpSniffSocket:
             sniff(filter=f"tcp port 8000",
                   iface="\\Device\\NPF_Loopback",
                   prn=self._sniffer_callback,
+                  stop_filter=lambda p: self.stop_sniffing,
                   store=False)
         except KeyboardInterrupt:
             print("\n[INFO] Stopping sniffer.")
@@ -80,7 +80,6 @@ class TcpSniffSocket:
                 # Add the payload to the connection data, sorted by sequence number
                 seq = tcp_layer.seq
                 payload = bytes(tcp_layer.payload)
-
                 if payload != b'':
                     self.connections[active_conn].parse_payload(seq, payload, self.data_queue)
                     # print(f"[+] Packet captured in connection {active_conn}: Payload length: {len(payload)} bytes, Seq: {seq}, Payload {payload.decode()}")
@@ -92,9 +91,23 @@ class TcpSniffSocket:
                     # Clean up the connection data
                     del self.connections[active_conn]
 
+    def stop(self):
+        self.stop_sniffing = True
+
 
 if __name__ == '__main__':
     sock = TcpSniffSocket()
     sock.connect()
+    i = 0
+    while True:
+        if i > 1000:
+            sock.stop()
+            break
+        else:
+            print(sock.read_one_line())
+            i += 1
+
+    print('reading again')
     while True:
         print(sock.read_one_line())
+
